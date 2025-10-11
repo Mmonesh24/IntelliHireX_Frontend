@@ -226,7 +226,7 @@ const JobListings = () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
               Job Listings
             </h1>
-            <p className="text-gray-300 mt-2">Find your next opportunity and prepare for interviews with InterVueX.</p>
+            <p className="text-gray-300 mt-2">Find your next opportunity and prepare for interviews with IntelliHireX.</p>
           </div>
 
           {/* Search and Filters */}
@@ -614,7 +614,7 @@ const JobListings = () => {
                       <div className="pt-6 border-t border-gray-700">
                         <h3 className="text-lg font-medium mb-3 text-purple-300">Prepare for Your Interview</h3>
                         <p className="text-gray-300 mb-4">
-                          Use InterVueX's AI-powered training mode to practice for your interview and get real-time
+                          Use IntelliHireX's AI-powered training mode to practice for your interview and get real-time
                           feedback.
                         </p>
                         <Link
@@ -658,7 +658,7 @@ const JobListings = () => {
                     </svg>
                     <h3 className="text-xl font-medium text-white mb-2">Select a Job</h3>
                     <p className="text-gray-400 text-center max-w-md">
-                      Click on a job from the list to view details and apply. Use InterVueX to prepare for your interviews.
+                      Click on a job from the list to view details and apply. Use IntelliHireX to prepare for your interviews.
                     </p>
                   </div>
               )}

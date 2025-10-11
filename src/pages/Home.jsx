@@ -54,7 +54,7 @@ const Home = () => {
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 animate-fade-in">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
-              InterVueX
+              IntelliHireX
             </span>
           </h1>
           <p className="text-xl md:text-2xl font-light mb-8 text-gray-200 animate-fade-in animation-delay-300">
@@ -291,88 +291,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section
-        ref={teamRef}
-        className="py-20 px-4 sm:px-6 lg:px-8 animate-on-scroll opacity-0"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
-              Meet Our Team
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              The brilliant minds behind InterVueX
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Team Member 1 */}
-            <div className="bg-gradient-to-br from-gray-900 to-purple-900/40 p-8 rounded-2xl shadow-xl transform transition-all hover:scale-105 hover:shadow-2xl border border-purple-500/20 text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/src/imgs/images.jpg?height=96&width=96"
-                  alt="Saipranav M"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-bold mb-1 text-white">Saipranav M</h3>
-              <p className="text-purple-300 mb-3">Team Leader</p>
-              <p className="text-gray-300 text-sm">
-                II Year CSE, SSN College of Engineering
-              </p>
-            </div>
-
-            {/* Team Member 2 */}
-            <div className="bg-gradient-to-br from-gray-900 to-purple-900/40 p-8 rounded-2xl shadow-xl transform transition-all hover:scale-105 hover:shadow-2xl border border-purple-500/20 text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/src/imgs/catpuccin_w.jpg?height=96&width=96"
-                  alt="Ramcharan S"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-bold mb-1 text-white">Ramcharan S</h3>
-              <p className="text-purple-300 mb-3">Member</p>
-              <p className="text-gray-300 text-sm">
-                II Year CSE, SSN College of Engineering
-              </p>
-            </div>
-
-            {/* Team Member 3 */}
-            <div className="bg-gradient-to-br from-gray-900 to-purple-900/40 p-8 rounded-2xl shadow-xl transform transition-all hover:scale-105 hover:shadow-2xl border border-purple-500/20 text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/src/imgs/HD-wallpaper-ghibli-a·-github-topics-a·-github-cute-ghibli.jpg?height=96&width=96"
-                  alt="Rahul V S"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-bold mb-1 text-white">Rahul V S</h3>
-              <p className="text-purple-300 mb-3">Member</p>
-              <p className="text-gray-300 text-sm">
-                II Year CSE, SSN College of Engineering
-              </p>
-            </div>
-
-            {/* Team Member 4 */}
-            <div className="bg-gradient-to-br from-gray-900 to-purple-900/40 p-8 rounded-2xl shadow-xl transform transition-all hover:scale-105 hover:shadow-2xl border border-purple-500/20 text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/src/imgs/octocat_iphone_blue.jpg?height=96&width=96"
-                  alt="Sakthivel T"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-bold mb-1 text-white">Sakthivel T</h3>
-              <p className="text-purple-300 mb-3">Member</p>
-              <p className="text-gray-300 text-sm">
-                II Year CSE, SSN College of Engineering
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 animate-on-scroll opacity-0">
@@ -384,7 +302,7 @@ const Home = () => {
                 Ready to transform your interview experience?
               </h2>
               <p className="text-xl text-gray-200 mb-8 max-w-3xl mx-auto">
-                Join InterVueX today and discover the power of AI-enhanced
+                Join IntelliHireX today and discover the power of AI-enhanced
                 interviews for better hiring decisions.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -427,7 +345,7 @@ const Home = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
               <span className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-transparent bg-clip-text">
-                InterVueX
+                IntelliHireX
               </span>
               <p className="text-gray-400 mt-2">Intelligent talent insights.</p>
             </div>
@@ -486,7 +404,7 @@ const Home = () => {
           </div>
           <div className="mt-8 border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2025 InterVueX. All rights reserved.
+              © 2025 IntelliHireX. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a

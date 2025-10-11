@@ -73,7 +73,7 @@ const Register = () => {
               Create Account
             </h2>
             <p className="text-gray-300 mt-2">
-              Join InterVueX and transform your interview experience
+              Join IntelliHireX and transform your interview experience
             </p>
           </div>
 

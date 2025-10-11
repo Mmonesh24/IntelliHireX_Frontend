@@ -26,86 +26,139 @@ const CandidateDashboard = () => {
   }
 
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setIsLoading(true)
-        // Use hardcoded user ID since user is already logged in
-        const userId = loggedInUser.id
-        const response = await fetch(`http://localhost:8443/applicationsByUser?user_id=${userId}`)
+  const fetchApplications = async () => {
+    try {
+      setIsLoading(true);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch applications")
-        }
+      // Simulate API delay
+      await new Promise((res) => setTimeout(res, 500));
 
-        const data = await response.json()
+      // 🔹 MOCK DATA (simulating API response)
+      const data = {
+        status: "S",
+        applications: [
+          {
+            application_id: 1,
+            company_id: "OpenAI",
+            job_id: 101,
+            interviewer_id: 5,
+            meeting_id: "abc123",
+            status: "upcoming",
+            date: "2025-10-10",
+            time: "15:00",
+            score: null,
+            feedback: null,
+            coverletter: "Looking forward to this opportunity!",
+          },
+          {
+            application_id: 2,
+            company_id: "Google",
+            job_id: 102,
+            interviewer_id: 7,
+            meeting_id: null,
+            status: "pending",
+            date: null,
+            time: null,
+            score: null,
+            feedback: null,
+            coverletter: "Excited to apply for this position.",
+          },
+          {
+            application_id: 3,
+            company_id: "Microsoft",
+            job_id: 103,
+            interviewer_id: 2,
+            meeting_id: "xyz789",
+            status: "past",
+            date: "2025-09-20",
+            time: "10:00",
+            score: 85,
+            feedback: "Strong technical skills, could improve communication.",
+            coverletter: "Eager to contribute my experience.",
+          },
+        ],
+      };
 
-        if (data.status === "S") {
-          // Process the applications data
-          const allApplications = data.applications || []
+      if (data.status === "S") {
+        const allApplications = data.applications || [];
 
-          // Filter applications by status
-          const upcomingApps = allApplications.filter((app) => app.status !== "past" && app.meeting_id)
-          const pastApps = allApplications.filter((app) => app.status === "past")
-          const pendingApps = allApplications.filter((app) => app.status !== "past" && !app.meeting_id)
+        // Filter applications by status
+        const upcomingApps = allApplications.filter(
+          (app) => app.status !== "past" && app.meeting_id
+        );
+        const pastApps = allApplications.filter((app) => app.status === "past");
+        const pendingApps = allApplications.filter(
+          (app) => app.status !== "past" && !app.meeting_id
+        );
 
-          // Transform data for upcoming interviews
-          const upcomingData = upcomingApps.map((app) => ({
-            id: app.application_id.toString(),
-            company: app.company_id,
-            position: `Job ID: ${app.job_id}`,
-            date: app.date ? `${app.date} ${app.time || ""}` : new Date().toISOString(),
-            interviewer: `Interviewer ID: ${app.interviewer_id || "TBD"}`,
-            meeting_id: app.meeting_id,
-          }))
+        // Transform data for upcoming interviews
+        const upcomingData = upcomingApps.map((app) => ({
+          id: app.application_id.toString(),
+          company: app.company_id,
+          position: `Job ID: ${app.job_id}`,
+          date: app.date
+            ? `${app.date} ${app.time || ""}`
+            : new Date().toISOString(),
+          interviewer: `Interviewer ID: ${app.interviewer_id || "TBD"}`,
+          meeting_id: app.meeting_id,
+        }));
 
-          // Transform data for past interviews
-          const pastData = pastApps.map((app) => ({
-            id: app.application_id.toString(),
-            company: app.company_id,
-            position: `Job ID: ${app.job_id}`,
-            date: app.date ? `${app.date} ${app.time || ""}` : new Date().toISOString(),
-            score: app.score || 0,
-            feedback: app.feedback || "No feedback provided.",
-          }))
+        // Transform data for past interviews
+        const pastData = pastApps.map((app) => ({
+          id: app.application_id.toString(),
+          company: app.company_id,
+          position: `Job ID: ${app.job_id}`,
+          date: app.date
+            ? `${app.date} ${app.time || ""}`
+            : new Date().toISOString(),
+          score: app.score || 0,
+          feedback: app.feedback || "No feedback provided.",
+        }));
 
-          // Transform data for applications
-          const applicationsData = pendingApps.map((app) => ({
-            id: app.application_id.toString(),
-            company: app.company_id,
-            position: `Job ID: ${app.job_id}`,
-            status: app.status,
-            appliedDate: new Date().toISOString(), // Since the API doesn't provide this
-            coverletter: app.coverletter,
-          }))
+        // Transform data for applications
+        const applicationsData = pendingApps.map((app) => ({
+          id: app.application_id.toString(),
+          company: app.company_id,
+          position: `Job ID: ${app.job_id}`,
+          status: app.status,
+          appliedDate: new Date().toISOString(),
+          coverletter: app.coverletter,
+        }));
 
-          // Calculate stats
-          const totalInterviews = pastData.length
-          const scores = pastData.map((interview) => interview.score).filter((score) => score > 0)
-          const averageScore =
-              scores.length > 0 ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : 0
+        // Calculate stats
+        const totalInterviews = pastData.length;
+        const scores = pastData
+          .map((interview) => interview.score)
+          .filter((score) => score > 0);
+        const averageScore =
+          scores.length > 0
+            ? Math.round(
+                scores.reduce((sum, score) => sum + score, 0) / scores.length
+              )
+            : 0;
 
-          setUpcomingInterviews(upcomingData)
-          setPastInterviews(pastData)
-          setApplications(applicationsData)
-          setStats({
-            totalInterviews,
-            averageScore,
-            topSkill: upcomingData.length, // Number of upcoming interviews
-            improvementArea: "System Design", // This could be derived from feedback in a more sophisticated way
-          })
-        } else {
-          throw new Error(data.message || "Failed to retrieve applications")
-        }
-      } catch (err) {
-        console.error("Error fetching applications:", err)
-        setError(err.message)
-      } finally {
-        setIsLoading(false)
+        setUpcomingInterviews(upcomingData);
+        setPastInterviews(pastData);
+        setApplications(applicationsData);
+        setStats({
+          totalInterviews,
+          averageScore,
+          topSkill: upcomingData.length,
+          improvementArea: "System Design",
+        });
+      } else {
+        throw new Error(data.message || "Failed to retrieve applications");
       }
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    fetchApplications()
-  }, [])
+  fetchApplications();
+}, []);
 
   const formatDate = (dateString) => {
     const options = {

@@ -1,38 +1,40 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [userType, setUserType] = useState('candidate')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userType, setUserType] = useState("candidate");
+  const [role, setRole] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       // In a real app, you would validate credentials with an API
       // For demo purposes, we'll just simulate a successful login
-      await login({ email }, userType)
+      await login({ email }, userType);
       navigate(
-        userType === 'candidate'
-          ? '/candidate-dashboard'
-          : '/interviewer-dashboard'
-      )
+        userType === "candidate"
+          ? "/candidate-dashboard"
+          : "/interviewer-dashboard",
+        { state: { email, userType, role } }
+      );
     } catch (error) {
-      setError('Failed to log in. Please check your credentials.')
+      setError("Failed to log in. Please check your credentials.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
@@ -47,7 +49,7 @@ const Login = () => {
               Welcome Back
             </h2>
             <p className="text-gray-300 mt-2">
-              Sign in to continue to InterVueX
+              Sign in to continue to IntelliHireX
             </p>
           </div>
 
@@ -69,22 +71,22 @@ const Login = () => {
                 <button
                   type="button"
                   className={`py-3 px-4 rounded-lg border ${
-                    userType === 'candidate'
-                      ? 'border-purple-500 bg-purple-500/20 text-white'
-                      : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                    userType === "candidate"
+                      ? "border-purple-500 bg-purple-500/20 text-white"
+                      : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                   } transition-all focus:outline-none`}
-                  onClick={() => setUserType('candidate')}
+                  onClick={() => setUserType("candidate")}
                 >
                   Candidate
                 </button>
                 <button
                   type="button"
                   className={`py-3 px-4 rounded-lg border ${
-                    userType === 'interviewer'
-                      ? 'border-purple-500 bg-purple-500/20 text-white'
-                      : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                    userType === "interviewer"
+                      ? "border-purple-500 bg-purple-500/20 text-white"
+                      : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
                   } transition-all focus:outline-none`}
-                  onClick={() => setUserType('interviewer')}
+                  onClick={() => setUserType("interviewer")}
                 >
                   Interviewer
                 </button>
@@ -130,6 +132,29 @@ const Login = () => {
                 placeholder="Enter your password"
               />
             </div>
+            {userType === "interviewer" && (
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Select your role</option>
+                  <option value="technical">Technical Interviewer</option>
+                  <option value="hr">HR Interviewer</option>
+                  <option value="managerial">Managerial Interviewer</option>
+                </select>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -188,7 +213,7 @@ const Login = () => {
                     Signing in...
                   </span>
                 ) : (
-                  'Sign in'
+                  "Sign in"
                 )}
               </button>
             </div>
@@ -196,7 +221,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

@@ -1,182 +1,525 @@
-'use client'
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+"use client";
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useLocation } from "react-router-dom";
+import emailjs from '@emailjs/browser';
 
 const InterviewerDashboard = () => {
-  const { currentUser } = useAuth()
-  const navigate = useNavigate()
-  const [upcomingInterviews, setUpcomingInterviews] = useState([])
-  const [pastInterviews, setPastInterviews] = useState([])
-  const [candidates, setCandidates] = useState([])
+  const { state } = useLocation();
+  const { email, userType, role } = state || {};
+  console.log(email, userType, role);
+  const { currentUser } = useAuth();
+  const [interviewers, setInterviewers] = useState([
+    { id: 1, name: "Ramcharan" },
+    { id: 2, name: "Chandru" },
+    { id: 3, name: "Poorna" },
+    { id: 4, name: "Kaavya" },
+  ]);
+  const navigate = useNavigate();
+  const [upcomingInterviews, setUpcomingInterviews] = useState([]);
+  const [pastInterviews, setPastInterviews] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const [stats, setStats] = useState({
     totalInterviews: 0,
     averageRating: 0,
     pendingFeedback: 0,
     hireRate: 0,
-  })
+  });
 
-  const [showJobModal, setShowJobModal] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [selectedInterviewId, setSelectedInterviewId] = useState(null)
-  const [jobDetails, setJobDetails] = useState({
-    title: '',
-    location: '',
-    salary: '',
-    jobType: '',
-    experience: '',
-    description: '',
-    requirements: '',
-    responsibilities: '',
-    rubrics: '',
-  })
+  // HR-specific states with more mock data
+  const [hrVacancies, setHrVacancies] = useState([
+    {
+      id: "1",
+      title: "Senior Frontend Developer",
+      description: "Build responsive UIs with modern frameworks.",
+      candidates: [
+        {
+          id: "c1",
+          name: "Alice Johnson",
+          college: "SSN College",
+          email: "alice@ssn.edu.in",
+          skills: ["React", "JavaScript", "CSS"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c2",
+          name: "Bob Smith",
+          college: "SSN College",
+          email: "bob@ssn.edu.in",
+          skills: ["Vue", "TypeScript", "HTML"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c5",
+          name: "Eva Davis",
+          college: "SSN College",
+          email: "eva@ssn.edu.in",
+          skills: ["Angular", "RxJS", "SASS"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c6",
+          name: "Frank Wilson",
+          college: "SSN College",
+          email: "frank@ssn.edu.in",
+          skills: ["Next.js", "Tailwind", "GraphQL"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "Full Stack Engineer",
+      description: "Develop end-to-end applications.",
+      candidates: [
+        {
+          id: "c3",
+          name: "Charlie Brown",
+          college: "SSN College",
+          email: "charlie@ssn.edu.in",
+          skills: ["Node.js", "MongoDB", "Express"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c4",
+          name: "Diana Prince",
+          college: "SSN College",
+          email: "diana@ssn.edu.in",
+          skills: ["Python", "Django", "PostgreSQL"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c7",
+          name: "Grace Lee",
+          college: "SSN College",
+          email: "grace@ssn.edu.in",
+          skills: ["Ruby on Rails", "MySQL", "Redis"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c8",
+          name: "Henry Miller",
+          college: "SSN College",
+          email: "henry@ssn.edu.in",
+          skills: ["Java", "Spring Boot", "Oracle"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c9",
+          name: "Ivy Chen",
+          college: "SSN College",
+          email: "ivy@ssn.edu.in",
+          skills: ["PHP", "Laravel", "SQLite"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+      ],
+    },
+    {
+      id: "3",
+      title: "Backend Developer",
+      description: "Handle server-side logic and databases.",
+      candidates: [
+        {
+          id: "c10",
+          name: "Jack Thompson",
+          college: "SSN College",
+          email: "jack@ssn.edu.in",
+          skills: ["Go", "Gin", "PostgreSQL"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c11",
+          name: "Kara Novak",
+          college: "SSN College",
+          email: "kara@ssn.edu.in",
+          skills: ["Rust", "Actix", "SQLite"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+        {
+          id: "c12",
+          name: "Liam Garcia",
+          college: "SSN College",
+          email: "liam@ssn.edu.in",
+          skills: ["C#", ".NET Core", "SQL Server"],
+          status: "New Application",
+          level: null,
+          assignedInterviewer: null,
+        },
+      ],
+    },
+  ]);
+
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCampHireModal, setShowCampHireModal] = useState(false);
+  const [selectedInterviewId, setSelectedInterviewId] = useState(null);
   const [scheduleDetails, setScheduleDetails] = useState({
-    candidate: '',
-    position: '',
-    date: '',
-    time: '',
-  })
+    candidate: "",
+    position: "",
+    interviewer: "",
+    date: "",
+    time: "",
+  });
+  const [campHireDetails, setCampHireDetails] = useState({
+    role: "",
+    description: "",
+    skills: "",
+    expectations: "",
+    colleges: [{ name: "", email: "" }],
+  });
+
+  // Shortlist and Allocation modals
+  const [showShortlistModal, setShowShortlistModal] = useState(false);
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [selectedVacancyId, setSelectedVacancyId] = useState(null);
+  const [shortlistLevel, setShortlistLevel] = useState("");
+  const [allocationMode, setAllocationMode] = useState("single");
+  const [selectedInterviewer, setSelectedInterviewer] = useState("");
+  const [splitNumber, setSplitNumber] = useState(1);
+
+  // Loading states
+  const [isShortlisting, setIsShortlisting] = useState(false);
+  const [isAllocating, setIsAllocating] = useState(false);
 
   useEffect(() => {
+    // Initialize EmailJS with public key (optional if passed in send)
+    emailjs.init('zkNuDKNHWv99OYZq3');
+
     // In a real app, this data would be fetched from an API
     setUpcomingInterviews([
       {
-        id: '1',
-        candidate: 'Alice Johnson',
-        position: 'Senior Frontend Developer',
-        date: '2025-03-10T14:00:00',
+        id: "1",
+        candidate: "Alice Johnson",
+        position: "Senior Frontend Developer",
+        date: "2025-03-10T14:00:00",
       },
       {
-        id: '2',
-        candidate: 'Bob Smith',
-        position: 'Full Stack Engineer',
-        date: '2025-03-15T11:30:00',
+        id: "2",
+        candidate: "Bob Smith",
+        position: "Full Stack Engineer",
+        date: "2025-03-15T11:30:00",
       },
-    ])
+    ]);
 
     setPastInterviews([
       {
-        id: '3',
-        candidate: 'Charlie Brown',
-        position: 'Software Engineer II',
-        date: '2025-02-28T10:00:00',
+        id: "3",
+        candidate: "Charlie Brown",
+        position: "Software Engineer II",
+        date: "2025-02-28T10:00:00",
         rating: 4.5,
-        status: 'Hired',
+        status: "Hired",
       },
       {
-        id: '4',
-        candidate: 'Diana Prince',
-        position: 'Frontend Developer',
-        date: '2025-02-20T15:30:00',
+        id: "4",
+        candidate: "Diana Prince",
+        position: "Frontend Developer",
+        date: "2025-02-20T15:30:00",
         rating: 3.8,
-        status: 'Rejected',
+        status: "Rejected",
       },
-    ])
+    ]);
 
     setCandidates([
       {
-        id: '5',
-        name: 'Ethan Hunt',
-        position: 'UI Engineer',
-        status: 'Shortlisted',
-        appliedDate: '2025-03-01T09:15:00',
+        id: "5",
+        name: "Ethan Hunt",
+        position: "UI Engineer",
+        status: "Shortlisted",
+        appliedDate: "2025-03-01T09:15:00",
       },
       {
-        id: '6',
-        name: 'Fiona Gallagher',
-        position: 'React Developer',
-        status: 'In Review',
-        appliedDate: '2025-02-25T14:20:00',
+        id: "6",
+        name: "Fiona Gallagher",
+        position: "React Developer",
+        status: "In Review",
+        appliedDate: "2025-02-25T14:20:00",
       },
       {
-        id: '7',
-        name: 'George Lucas',
-        position: 'Frontend Specialist',
-        status: 'New Application',
-        appliedDate: '2025-03-05T11:45:00',
+        id: "7",
+        name: "George Lucas",
+        position: "Frontend Specialist",
+        status: "New Application",
+        appliedDate: "2025-03-05T11:45:00",
       },
-    ])
+    ]);
 
     setStats({
       totalInterviews: 24,
       averageRating: 4.2,
       pendingFeedback: 3,
       hireRate: 68,
-    })
-  }, [])
+    });
+  }, []);
 
   const formatDate = (dateString) => {
     const options = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }
-    return new Date(dateString).toLocaleDateString(undefined, options)
-  }
-
-  const handleJobDetailsChange = (e) => {
-    const { name, value } = e.target
-    setJobDetails((prevDetails) => ({
-      ...prevDetails,
-      [name]: value,
-    }))
-  }
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
 
   const handleScheduleDetailsChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setScheduleDetails((prevDetails) => ({
       ...prevDetails,
       [name]: value,
-    }))
-  }
-
-  const handleCreateJob = () => {
-    // In a real app, this would send the job details to an API
-    alert('Job created successfully!')
-    setShowJobModal(false)
-    setJobDetails({
-      title: '',
-      location: '',
-      salary: '',
-      jobType: '',
-      experience: '',
-      description: '',
-      requirements: '',
-      responsibilities: '',
-      rubrics: '',
-    })
-  }
+    }));
+  };
 
   const handleScheduleInterview = () => {
     // In a real app, this would send the schedule details to an API
-    alert('Interview scheduled successfully!')
-    setShowScheduleModal(false)
+    alert("Interview scheduled successfully!");
+    setShowScheduleModal(false);
     setScheduleDetails({
-      candidate: '',
-      position: '',
-      date: '',
-      time: '',
-    })
-  }
+      candidate: "",
+      position: "",
+      date: "",
+      time: "",
+    });
+  };
+
+  const handleCampHireChange = (e) => {
+    const { name, value } = e.target;
+    setCampHireDetails((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const addCollege = () => {
+    setCampHireDetails((prev) => ({
+      ...prev,
+      colleges: [...prev.colleges, { name: "", email: "" }],
+    }));
+  };
+
+  const removeCollege = (index) => {
+    setCampHireDetails((prev) => ({
+      ...prev,
+      colleges: prev.colleges.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleCollegeChange = (index, field, value) => {
+    setCampHireDetails((prev) => {
+      const colleges = [...prev.colleges];
+      colleges[index] = { ...colleges[index], [field]: value };
+      return { ...prev, colleges };
+    });
+  };
+
+  const handleGenerateLinks = async () => {
+    try {
+      const serviceId = 'service_g9jtwgh';
+      const templateId = 'template_z5w59cv';
+      const publicKey = 'zkNuDKNHWv99OYZq3';
+
+      let sentCount = 0;
+      const errors = [];
+
+      for (const college of campHireDetails.colleges) {
+        if (!college.name || !college.email) {
+          console.warn(`Skipping invalid college: ${college.name || 'Unnamed'} - Missing name or email.`);
+          continue;
+        }
+
+        const templateParams = {
+          to_name: college.name,
+          to_email: college.email,
+          role: campHireDetails.role,
+          description: campHireDetails.description,
+          skills: campHireDetails.skills,
+          expectations: campHireDetails.expectations,
+          link: `https://yourapp.com/register?role=${encodeURIComponent(campHireDetails.role)}&college=${encodeURIComponent(college.name)}`,
+        };
+
+        try {
+          // Send the email via EmailJS, passing publicKey as fourth argument
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+          console.log(`Email sent successfully to ${college.name} (${college.email})`);
+          sentCount++;
+        } catch (sendError) {
+          console.error(`Failed to send email to ${college.email}:`, sendError);
+          errors.push(college.email);
+        }
+      }
+
+      if (sentCount > 0) {
+        const message = `✅ CampHire links sent successfully to ${sentCount} college(s)!`;
+        alert(message);
+        console.log(message);
+      }
+
+      if (errors.length > 0) {
+        alert(`⚠️ Failed to send to ${errors.length} email(s): ${errors.join(', ')}. Check console for details.`);
+      }
+
+      if (sentCount === 0 && errors.length === 0) {
+        alert('⚠️ No valid colleges to send to. Please fill in all fields.');
+      }
+
+      setShowCampHireModal(false);
+      setCampHireDetails({
+        role: "",
+        description: "",
+        skills: "",
+        expectations: "",
+        colleges: [{ name: "", email: "" }],
+      });
+    } catch (error) {
+      console.error('Overall Email send failed:', error);
+      alert('❌ Failed to send emails. Check console for details and ensure your EmailJS setup is correct.');
+    }
+  };
+
+  // HR functions - Bulk shortlist for vacancy
+  const handleBulkShortlist = async (vacancyId) => {
+    const vacancy = hrVacancies.find(v => v.id === vacancyId);
+    const newCandidates = vacancy.candidates.filter(c => c.status === "New Application");
+    if (newCandidates.length === 0) {
+      alert("No new candidates to shortlist in this vacancy.");
+      return;
+    }
+    setIsShortlisting(true);
+    setTimeout(() => {
+      setSelectedVacancyId(vacancyId);
+      setShowShortlistModal(true);
+      setIsShortlisting(false);
+    }, 2000);
+  };
+
+  const handleConfirmShortlist = () => {
+    if (!shortlistLevel) return;
+    setHrVacancies(prev =>
+      prev.map(v =>
+        v.id === selectedVacancyId
+          ? {
+              ...v,
+              candidates: v.candidates.map(c =>
+                c.status === "New Application"
+                  ? { ...c, status: `Shortlisted - ${shortlistLevel.charAt(0).toUpperCase() + shortlistLevel.slice(1)}`, level: shortlistLevel }
+                  : c
+              ),
+            }
+          : v
+      )
+    );
+    setShowShortlistModal(false);
+    setShowAllocationModal(true);
+  };
+
+  const handleConfirmAllocation = async () => {
+    const vacancy = hrVacancies.find(v => v.id === selectedVacancyId);
+    const shortlistedCandidates = vacancy.candidates.filter(c => c.level && !c.assignedInterviewer);
+    if (shortlistedCandidates.length === 0) {
+      alert("No shortlisted candidates to allocate.");
+      return;
+    }
+    setIsAllocating(true);
+    setTimeout(() => {
+      if (allocationMode === "single") {
+        if (!selectedInterviewer) {
+          setIsAllocating(false);
+          return;
+        }
+        setHrVacancies(prev =>
+          prev.map(v =>
+            v.id === selectedVacancyId
+              ? {
+                  ...v,
+                  candidates: v.candidates.map(c =>
+                    c.level && !c.assignedInterviewer
+                      ? { ...c, assignedInterviewer: selectedInterviewer }
+                      : c
+                  ),
+                }
+              : v
+          )
+        );
+      } else {
+        if (!splitNumber || splitNumber < 1 || splitNumber > interviewers.length) {
+          setIsAllocating(false);
+          return;
+        }
+        const numSplits = parseInt(splitNumber);
+        const firstNInterviewers = interviewers.slice(0, numSplits).map(i => i.name);
+        const newCandidates = vacancy.candidates.map(c => {
+          if (c.level && !c.assignedInterviewer) {
+            const index = shortlistedCandidates.findIndex(sc => sc.id === c.id);
+            if (index !== -1) {
+              const interviewerIndex = index % numSplits;
+              const assigned = firstNInterviewers[interviewerIndex];
+              return { ...c, assignedInterviewer: assigned };
+            }
+          }
+          return c;
+        });
+        setHrVacancies(prev =>
+          prev.map(v =>
+            v.id === selectedVacancyId
+              ? {
+                  ...v,
+                  candidates: newCandidates,
+                }
+              : v
+          )
+        );
+      }
+      setShowAllocationModal(false);
+      setSelectedVacancyId(null);
+      setShortlistLevel("");
+      setAllocationMode("single");
+      setSelectedInterviewer("");
+      setSplitNumber(1);
+      alert("Allocation completed!");
+      setIsAllocating(false);
+    }, 2000);
+  };
 
   const handleJoinInterview = (interviewId) => {
-    setSelectedInterviewId(interviewId)
-    setShowConfirmModal(true)
-  }
+    setSelectedInterviewId(interviewId);
+    setShowConfirmModal(true);
+  };
 
   const handleConfirmJoin = () => {
     // Close the modal
-    setShowConfirmModal(false)
+    setShowConfirmModal(false);
 
     // Navigate to the interview room
     if (selectedInterviewId) {
-      navigate(`/interview-room/${selectedInterviewId}`)
+      navigate(`/interview-room/${selectedInterviewId}`);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8 pb-12">
@@ -186,23 +529,31 @@ const InterviewerDashboard = () => {
             Interviewer Dashboard
           </h1>
           <p className="text-gray-300 mt-2">
-            Welcome back, {currentUser?.name || 'Interviewer'}! Here's your
+            Welcome back, {currentUser?.name || "Interviewer"}! Here's your
             interview schedule and candidate pool.
           </p>
         </div>
         <div className="mt-12 flex justify-end space-x-4 mb-8">
-          <button
-            onClick={() => setShowJobModal(true)}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105"
-          >
-            Create Job
-          </button>
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105"
-          >
-            Schedule Interview
-          </button>
+          {role === "hr" && (
+            <>
+              <button
+                onClick={() => setShowCampHireModal(true)}
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105"
+              >
+                Create CampHire link
+              </button>
+            </>
+          )}
+          {role !== "hr" && (
+            <>
+            <button
+                onClick={() => setShowScheduleModal(true)}
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105"
+              >
+                Schedule Interview
+              </button>
+            </>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -321,60 +672,91 @@ const InterviewerDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upcoming Interviews */}
-          <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
-            <h2 className="text-xl font-bold mb-4 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                ></path>
-              </svg>
-              Upcoming Interviews
-            </h2>
-
-            {upcomingInterviews.length > 0 ? (
-              <div className="space-y-4">
-                {upcomingInterviews.map((interview) => (
-                  <div
-                    key={interview.id}
-                    className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-white">
-                          {interview.candidate}
-                        </h3>
-                        <p className="text-sm text-purple-300">
-                          {interview.position}
-                        </p>
-                        <p className="text-sm text-gray-300 mt-2">
-                          {formatDate(interview.date)}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleJoinInterview(interview.id)}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg transition-colors"
+        {role === "hr" ? (
+          <div className="space-y-8">
+            {hrVacancies.map((vacancy) => {
+              const newCandidatesCount = vacancy.candidates.filter(c => c.status === "New Application").length;
+              return (
+                <div key={vacancy.id} className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
+                  <h2 className="text-xl font-bold mb-4 flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2 text-purple-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      ></path>
+                    </svg>
+                    {vacancy.title}
+                  </h2>
+                  <p className="text-gray-300 mb-4">{vacancy.description}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    {vacancy.candidates.map((candidate) => (
+                      <div
+                        key={candidate.id}
+                        className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
                       >
-                        Join
+                        <h3 className="font-medium text-white">{candidate.name}</h3>
+                        <p className="text-sm text-purple-300">{candidate.college}</p>
+                        <p className="text-xs text-gray-400 mt-1">{candidate.email}</p>
+                        <ul className="text-xs text-gray-300 mt-2 space-y-1 max-h-20 overflow-y-auto">
+                          {candidate.skills.map((skill) => (
+                            <li key={skill} className="flex items-center">
+                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              {skill}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="flex justify-between items-center mt-3">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              candidate.status.includes("Shortlisted")
+                                ? "bg-green-900/50 text-green-300"
+                                : "bg-blue-900/50 text-blue-300"
+                            }`}
+                          >
+                            {candidate.status}
+                          </span>
+                          {candidate.level && <span className="text-xs text-purple-300">Level: {candidate.level}</span>}
+                          {candidate.assignedInterviewer && <span className="text-xs text-yellow-300">Assigned: {candidate.assignedInterviewer}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {newCandidatesCount > 0 && (
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => handleBulkShortlist(vacancy.id)}
+                        disabled={isShortlisting}
+                        className={`px-6 py-3 rounded-lg text-white font-medium transition-all transform ${
+                          isShortlisting
+                            ? 'opacity-50 cursor-not-allowed bg-gray-600'
+                            : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 hover:scale-105'
+                        }`}
+                      >
+                        {isShortlisting ? 'Loading...' : `Bulk Shortlist ${newCandidatesCount} New Candidates`}
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Upcoming Interviews */}
+            <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
                 <svg
-                  className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                  className="w-5 h-5 mr-2 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -387,66 +769,64 @@ const InterviewerDashboard = () => {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   ></path>
                 </svg>
-                <p className="text-gray-400">No upcoming interviews</p>
-              </div>
-            )}
-          </div>
+                Upcoming Interviews
+              </h2>
 
-          {/* Candidate Pool */}
-          <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
-            <h2 className="text-xl font-bold mb-4 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                ></path>
-              </svg>
-              Candidate Pool
-            </h2>
-
-            {candidates.length > 0 ? (
-              <div className="space-y-4">
-                {candidates.map((candidate) => (
-                  <div
-                    key={candidate.id}
-                    className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
-                  >
-                    <h3 className="font-medium text-white">{candidate.name}</h3>
-                    <p className="text-sm text-purple-300">
-                      {candidate.position}
-                    </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          candidate.status === 'Shortlisted'
-                            ? 'bg-green-900/50 text-green-300'
-                            : candidate.status === 'In Review'
-                              ? 'bg-yellow-900/50 text-yellow-300'
-                              : 'bg-blue-900/50 text-blue-300'
-                        }`}
-                      >
-                        {candidate.status}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        Applied{' '}
-                        {new Date(candidate.appliedDate).toLocaleDateString()}
-                      </span>
+              {upcomingInterviews.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingInterviews.map((interview) => (
+                    <div
+                      key={interview.id}
+                      className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-white">
+                            {interview.candidate}
+                          </h3>
+                          <p className="text-sm text-purple-300">
+                            {interview.position}
+                          </p>
+                          <p className="text-sm text-gray-300 mt-2">
+                            {formatDate(interview.date)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleJoinInterview(interview.id)}
+                          className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg transition-colors"
+                        >
+                          Join
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg
+                    className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                  <p className="text-gray-400">No upcoming interviews</p>
+                </div>
+              )}
+            </div>
+
+            {/* Candidate Pool */}
+            <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
                 <svg
-                  className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                  className="w-5 h-5 mr-2 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -459,82 +839,65 @@ const InterviewerDashboard = () => {
                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                   ></path>
                 </svg>
-                <p className="text-gray-400">No candidates in the pool</p>
-              </div>
-            )}
-          </div>
+                Candidate Pool
+              </h2>
 
-          {/* Past Interviews */}
-          <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
-            <h2 className="text-xl font-bold mb-4 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              Past Interviews
-            </h2>
-
-            {pastInterviews.length > 0 ? (
-              <div className="space-y-4">
-                {pastInterviews.map((interview) => (
-                  <div
-                    key={interview.id}
-                    className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-white">
-                          {interview.candidate}
-                        </h3>
-                        <p className="text-sm text-purple-300">
-                          {interview.position}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatDate(interview.date)}
-                        </p>
-                      </div>
-                      <div className="flex items-center">
+              {candidates.length > 0 ? (
+                <div className="space-y-4">
+                  {candidates.map((candidate) => (
+                    <div
+                      key={candidate.id}
+                      className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
+                    >
+                      <h3 className="font-medium text-white">{candidate.name}</h3>
+                      <p className="text-sm text-purple-300">
+                        {candidate.position}
+                      </p>
+                      <div className="flex justify-between items-center mt-2">
                         <span
-                          className={`text-xs px-2 py-1 rounded-full mr-2 ${
-                            interview.status === 'Hired'
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-red-900/50 text-red-300'
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            candidate.status === "Shortlisted"
+                              ? "bg-green-900/50 text-green-300"
+                              : candidate.status === "In Review"
+                                ? "bg-yellow-900/50 text-yellow-300"
+                                : "bg-blue-900/50 text-blue-300"
                           }`}
                         >
-                          {interview.status}
+                          {candidate.status}
                         </span>
-                        <div className="flex items-center bg-gray-700/50 px-2 py-1 rounded-lg">
-                          <svg
-                            className="w-4 h-4 text-yellow-400 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                          </svg>
-                          <span className="text-sm font-bold">
-                            {interview.rating.toFixed(1)}
-                          </span>
-                        </div>
+                        <span className="text-xs text-gray-400">
+                          Applied{" "}
+                          {new Date(candidate.appliedDate).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg
+                    className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    ></path>
+                  </svg>
+                  <p className="text-gray-400">No candidates in the pool</p>
+                </div>
+              )}
+            </div>
+            {/* Past Interviews */}
+            <div className="bg-gray-900/60 backdrop-blur-lg p-6 rounded-xl shadow-xl border border-purple-500/20">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
                 <svg
-                  className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                  className="w-5 h-5 mr-2 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -547,156 +910,342 @@ const InterviewerDashboard = () => {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <p className="text-gray-400">No past interviews</p>
-              </div>
-            )}
+                Past Interviews
+              </h2>
+
+              {pastInterviews.length > 0 ? (
+                <div className="space-y-4">
+                  {pastInterviews.map((interview) => (
+                    <div
+                      key={interview.id}
+                      className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-white">
+                            {interview.candidate}
+                          </h3>
+                          <p className="text-sm text-purple-300">
+                            {interview.position}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDate(interview.date)}
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full mr-2 ${
+                              interview.status === "Hired"
+                                ? "bg-green-900/50 text-green-300"
+                                : "bg-red-900/50 text-red-300"
+                            }`}
+                          >
+                            {interview.status}
+                          </span>
+                          <div className="flex items-center bg-gray-700/50 px-2 py-1 rounded-lg">
+                            <svg
+                              className="w-4 h-4 text-yellow-400 mr-1"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            <span className="text-sm font-bold">
+                              {interview.rating.toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg
+                    className="w-12 h-12 mx-auto text-gray-600 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                  <p className="text-gray-400">No past interviews</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
       </div>
 
-      {/* Create Job Modal */}
-      {showJobModal && (
+      {/* HR Modals */}
+      {showShortlistModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl border border-purple-500/30 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-900 rounded-xl border border-purple-500/30 p-6 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-6 text-center text-white">Bulk Shortlist Level</h2>
+            <p className="text-gray-300 mb-4">
+              Select level for all {hrVacancies.find(v => v.id === selectedVacancyId)?.candidates.filter(c => c.status === "New Application").length || 0} new candidates in this vacancy.
+            </p>
+            <select
+              value={shortlistLevel}
+              onChange={(e) => setShortlistLevel(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Select Level</option>
+              <option value="low">Low</option>
+              <option value="mid">Mid</option>
+              <option value="high">High</option>
+            </select>
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => {
+                  setShowShortlistModal(false);
+                  setShortlistLevel("");
+                }}
+                className="px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmShortlist}
+                disabled={!shortlistLevel}
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white transition-colors disabled:opacity-50"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAllocationModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl border border-purple-500/30 p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-6 text-center text-white">Allocate Candidates</h2>
+            <p className="text-gray-300 mb-4">
+              Allocate {hrVacancies.find(v => v.id === selectedVacancyId)?.candidates.filter(c => c.level && !c.assignedInterviewer).length || 0} shortlisted candidates in this vacancy.
+            </p>
+            <div className="space-y-4 mb-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="single"
+                  checked={allocationMode === "single"}
+                  onChange={(e) => setAllocationMode(e.target.value)}
+                  className="mr-2"
+                />
+                Allocate all to single interviewer
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="bulk"
+                  checked={allocationMode === "bulk"}
+                  onChange={(e) => setAllocationMode(e.target.value)}
+                  className="mr-2"
+                />
+                Bulk split across multiple interviewers
+              </label>
+            </div>
+            {allocationMode === "single" && (
+              <select
+                value={selectedInterviewer}
+                onChange={(e) => setSelectedInterviewer(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              >
+                <option value="">Select Interviewer</option>
+                {interviewers.map((interviewer) => (
+                  <option key={interviewer.id} value={interviewer.name}>
+                    {interviewer.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            {allocationMode === "bulk" && (
+              <input
+                type="number"
+                value={splitNumber}
+                onChange={(e) => setSplitNumber(e.target.value)}
+                min="1"
+                max={interviewers.length}
+                placeholder="Number of splits (1-4)"
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              />
+            )}
+            <div className="flex justify-end space-x-4 pt-4 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  setShowAllocationModal(false);
+                  setAllocationMode("single");
+                  setSelectedInterviewer("");
+                  setSplitNumber(1);
+                }}
+                className="px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAllocation}
+                disabled={
+                  isAllocating ||
+                  (allocationMode === "single"
+                    ? !selectedInterviewer
+                    : !splitNumber || splitNumber < 1 || splitNumber > interviewers.length)
+                }
+                className={`px-6 py-3 rounded-lg text-white transition-colors ${
+                  isAllocating || (allocationMode === "single" ? !selectedInterviewer : !splitNumber || splitNumber < 1 || splitNumber > interviewers.length)
+                    ? 'opacity-50 cursor-not-allowed bg-gray-600'
+                    : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500'
+                }`}
+              >
+                {isAllocating ? 'Allocating...' : 'Confirm Allocation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CampHire Modal */}
+      {showCampHireModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl border border-purple-500/30 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
-              Create Job
+              Create CampHire Links
             </h2>
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Job Title
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={jobDetails.title}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter job title"
-                />
+              {/* Shared Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Role
+                  </label>
+                  <input
+                    type="text"
+                    name="role"
+                    value={campHireDetails.role}
+                    onChange={handleCampHireChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Enter role (e.g., Software Engineer)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Role Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={campHireDetails.description}
+                    onChange={handleCampHireChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-24"
+                    placeholder="Enter role description"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Necessary Skills
+                  </label>
+                  <textarea
+                    name="skills"
+                    value={campHireDetails.skills}
+                    onChange={handleCampHireChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-24"
+                    placeholder="Enter necessary skills (comma-separated)"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Expectations
+                  </label>
+                  <textarea
+                    name="expectations"
+                    value={campHireDetails.expectations}
+                    onChange={handleCampHireChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-24"
+                    placeholder="Enter expectations from candidates"
+                  ></textarea>
+                </div>
               </div>
 
+              {/* Colleges Section */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Location
+                  Colleges
                 </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={jobDetails.location}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter job location"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Salary
-                </label>
-                <input
-                  type="text"
-                  name="salary"
-                  value={jobDetails.salary}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter salary range"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Job Type
-                </label>
-                <input
-                  type="text"
-                  name="jobType"
-                  value={jobDetails.jobType}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter job type (e.g., Full-time, Part-time)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Experience
-                </label>
-                <input
-                  type="text"
-                  name="experience"
-                  value={jobDetails.experience}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  placeholder="Enter experience level (e.g., 3+ years)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Job Description
-                </label>
-                <textarea
-                  name="description"
-                  value={jobDetails.description}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-32"
-                  placeholder="Enter job description"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Requirements
-                </label>
-                <textarea
-                  name="requirements"
-                  value={jobDetails.requirements}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-32"
-                  placeholder="Enter job requirements"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Responsibilities
-                </label>
-                <textarea
-                  name="responsibilities"
-                  value={jobDetails.responsibilities}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-32"
-                  placeholder="Enter job responsibilities"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Rubrics
-                </label>
-                <textarea
-                  name="rubrics"
-                  value={jobDetails.rubrics}
-                  onChange={handleJobDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-32"
-                  placeholder="Enter job rubrics"
-                ></textarea>
+                {campHireDetails.colleges.map((college, index) => (
+                  <div key={index} className="space-y-4 mb-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-medium text-white">College {index + 1}</h4>
+                      {campHireDetails.colleges.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCollege(index)}
+                          className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-colors"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          College Name
+                        </label>
+                        <input
+                          type="text"
+                          value={college.name}
+                          onChange={(e) => handleCollegeChange(index, "name", e.target.value)}
+                          className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                          placeholder="Enter college name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          College Email
+                        </label>
+                        <input
+                          type="email"
+                          value={college.email}
+                          onChange={(e) => handleCollegeChange(index, "email", e.target.value)}
+                          className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                          placeholder="Enter college email"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addCollege}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded-lg transition-colors"
+                >
+                  Add Another College
+                </button>
               </div>
 
               <div className="flex justify-end space-x-4 pt-4 border-t border-gray-700">
                 <button
-                  onClick={() => setShowJobModal(false)}
+                  onClick={() => setShowCampHireModal(false)}
                   className="px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleCreateJob}
+                  onClick={handleGenerateLinks}
                   className="px-6 py-3 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white transition-colors"
+                  disabled={!campHireDetails.role || campHireDetails.colleges.some(c => !c.name || !c.email)}
                 >
-                  Create Job
+                  Generate & Send Links
                 </button>
               </div>
             </div>
@@ -713,23 +1262,46 @@ const InterviewerDashboard = () => {
             </h2>
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Candidate Name
-                </label>
-                <select
-                  name="candidate"
-                  value={scheduleDetails.candidate}
-                  onChange={handleScheduleDetailsChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Select a candidate</option>
-                  {candidates.map((candidate) => (
-                    <option key={candidate.id} value={candidate.name}>
-                      {candidate.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-6">
+                {/* Candidate Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Candidate Name
+                  </label>
+                  <select
+                    name="candidate"
+                    value={scheduleDetails.candidate}
+                    onChange={handleScheduleDetailsChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  >
+                    <option value="">Select a candidate</option>
+                    {candidates.map((candidate) => (
+                      <option key={candidate.id} value={candidate.name}>
+                        {candidate.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Interviewer Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Interviewer Name
+                  </label>
+                  <select
+                    name="interviewer"
+                    value={scheduleDetails.interviewer}
+                    onChange={handleScheduleDetailsChange}
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  >
+                    <option value="">Select an interviewer</option>
+                    {interviewers.map((interviewer) => (
+                      <option key={interviewer.id} value={interviewer.name}>
+                        {interviewer.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -799,7 +1371,7 @@ const InterviewerDashboard = () => {
               Join Interview
             </h2>
             <p className="text-gray-300 mb-6 text-center">
-              You are about to join this interview as an{' '}
+              You are about to join this interview as an{" "}
               <span className="font-bold text-purple-300">interviewer</span>.
               You'll be able to rate candidate responses and provide feedback.
             </p>
@@ -834,7 +1406,7 @@ const InterviewerDashboard = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default InterviewerDashboard
+export default InterviewerDashboard;
