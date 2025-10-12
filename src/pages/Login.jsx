@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { loginUser } from "../utilis/loginApi";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,42 +12,38 @@ const Login = () => {
   const [role, setRole] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const response = await fetch("http://localhost:8080/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const data = await loginUser(email, password);
 
-    const data = await response.json();
-
-    if (response.ok && data.status === "success") {
-      localStorage.setItem("jwt", data.token);
-      await login({ email }, userType);
-      navigate(
-        userType === "candidate"
-          ? "/candidate-dashboard"
-          : "/interviewer-dashboard",
-        { state: { email, userType, role } }
-      );
-    } else {
-      setError(data.message || "Invalid email or password.");
+      if (data.status === 200) {
+        localStorage.setItem("jwt", data.data.token);
+        await login({ email }, userType);
+        navigate(
+          userType === "candidate"
+            ? "/candidate-dashboard"
+            : "/interviewer-dashboard",
+          { state: { email, userType, role } }
+        );
+      } else {
+        setError(data.message || "Invalid email or password.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    setError("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">

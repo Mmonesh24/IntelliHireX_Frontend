@@ -1,9 +1,8 @@
-'use client'
 
+import { registerUser } from '../utilis/registerApi';
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { registerUser } from '../utilis/api'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -27,50 +26,49 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, userType: type }))
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
 
-    // Validate form
-    if (formData.password !== formData.confirmPassword) {
-      return setError('Passwords do not match')
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (formData.password.length < 6) {
-      return setError('Password must be at least 6 characters')
-    }
-
-    setLoading(true)
-
-    try {
-      const data = await registerUser({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: "candidate",
-      })
-
-      // If backend returned a user object and possibly a token, persist locally
-      const user = { name: data.name || formData.name, email: data.email || formData.email }
-      // Save JWT if provided
-      if (data.token) {
-        localStorage.setItem('jwt', data.token)
-      }
-
-      // Update AuthContext (keeps existing behavior)
-      register(user, formData.userType)
-
-      navigate(
-        formData.userType === 'candidate'
-          ? '/candidate-dashboard'
-          : '/interviewer-dashboard'
-      )
-    } catch (err) {
-      setError(err.message || 'Failed to create an account. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+  if (formData.password !== formData.confirmPassword) {
+    return setError('Passwords do not match');
   }
+
+  if (formData.password.length < 6) {
+    return setError('Password must be at least 6 characters');
+  }
+
+  setLoading(true);
+
+  try {
+    const data = await registerUser({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.userType, // candidate or interviewer
+    });
+
+    // Save JWT if returned
+    if (data.token) {
+      localStorage.setItem('jwt', data.token);
+    }
+
+    // Update AuthContext
+    register({ name: data.name, email: data.email }, formData.userType);
+
+    navigate(
+      formData.userType === 'candidate'
+        ? '/candidate-dashboard'
+        : '/interviewer-dashboard'
+    );
+  } catch (err) {
+    setError(err.message || 'Failed to create an account. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">

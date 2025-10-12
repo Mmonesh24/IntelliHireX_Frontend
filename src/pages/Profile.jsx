@@ -1,5 +1,5 @@
-"use client"
 
+import { fetchProfile, updateProfile } from "../utilis/profileApi";
 import { useState, useEffect } from "react"
 
 const Profile = () => {
@@ -15,7 +15,7 @@ const Profile = () => {
   const [jobDetails, setJobDetails] = useState({
     title: "",
     company: "",
-    location: "",
+    address: "",
     salary: "",
     jobType: "",
     experience: "",
@@ -31,100 +31,40 @@ const Profile = () => {
     time: "",
   })
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setIsLoading(true)
-        // Use fixed user ID of 5 as specified in the example
-        const userId = 5
 
-        const response = await fetch(`http://localhost:8443/get_profile?user_id=${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch profile")
-        }
-
-        const data = await response.json()
-        console.log("Profile data:", data)
-
-        // Transform the API response to match our component's data structure
-        const transformedProfile = {
-          name: data.name || "User",
-          email: data.email || "user@example.com",
-          role: data.role || "Job Seeker",
-          location: data.location || "Not specified",
-          bio: data.description || "",
-          skills: data.skills || [],
-          education: (data.education || []).map((edu) => ({
-            degree: edu.degree,
-            institution: edu.college,
-            year: edu.passout_year?.toString() || "",
-          })),
-          experience: (data.experience || []).map((exp) => ({
-            title: exp.role_name,
-            company: exp.company_name,
-            duration: `${exp.year || ""} - Present`,
-            description: exp.description,
-          })),
-          projects: data.projects || [],
-        }
-
-        setProfile(transformedProfile)
-        setEditedProfile(transformedProfile)
-        setIsLoading(false)
-      } catch (err) {
-        console.error("Error fetching profile:", err)
-        setError(err.message)
-        setIsLoading(false)
-
-        // Fallback to mock data for demo purposes
-        const mockProfile = {
-          name: "Ramcharan",
-          email: "ram@gmail.com",
-          role: "Machine Learning Engineer",
-          location: "Bangalore, India",
-          bio: "Passionate ML engineer with expertise in Python and deep learning.",
-          skills: ["Python", "TensorFlow", "PyTorch", "Docker", "Kubernetes"],
-          education: [
-            {
-              degree: "M.Tech in Artificial Intelligence",
-              institution: "IIT Delhi",
-              year: "2022",
-            },
-          ],
-          experience: [
-            {
-              title: "ML Engineer",
-              company: "AI Labs",
-              duration: "2022 - Present",
-              description: "Developed deep learning models for image classification and NLP applications.",
-            },
-            {
-              title: "Data Scientist",
-              company: "BigData Solutions",
-              duration: "2020 - 2022",
-              description: "Performed data analysis and built predictive models using Python and Pandas.",
-            },
-          ],
-          projects: [
-            {
-              name: "Autonomous Driving AI",
-              role: "Lead Developer",
-              description: "Developed a computer vision system for autonomous vehicles using TensorFlow and OpenCV.",
-            },
-          ],
-        }
-        setProfile(mockProfile)
-        setEditedProfile(mockProfile)
-      }
+useEffect(() => {
+  const loadProfile = async () => {
+    const token = localStorage.getItem("jwt");
+    try {
+      setIsLoading(true);
+      const profileData = await fetchProfile(token);
+      setProfile(profileData);
+      setEditedProfile(profileData);
+      setIsLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
     }
+  };
 
-    fetchProfile()
-  }, [])
+  loadProfile();
+}, []);
+
+const handleSaveProfile = async () => {
+  const token = localStorage.getItem("jwt");
+  try {
+    setSaveStatus("saving");
+    await updateProfile(editedProfile, token);
+    setProfile(editedProfile);
+    setIsEditing(false);
+    setSaveStatus("success");
+    setTimeout(() => setSaveStatus(null), 3000);
+  } catch (err) {
+    setSaveStatus("error");
+    setTimeout(() => setSaveStatus(null), 3000);
+  }
+};
+
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing)
@@ -176,70 +116,7 @@ const Profile = () => {
     setEditedProfile((prev) => ({ ...prev, projects: newProjects }))
   }
 
-  const handleSaveProfile = async () => {
-    try {
-      setSaveStatus("saving")
 
-      // Prepare the data for the API in the exact format expected
-      const profileData = {
-        user_id: 5, // Fixed user ID as specified
-        name: editedProfile.name,
-        role: editedProfile.role,
-        description: editedProfile.bio,
-        email: editedProfile.email,
-        location: editedProfile.location,
-        skills: editedProfile.skills,
-        experience: editedProfile.experience.map((exp) => ({
-          role_name: exp.title,
-          company_name: exp.company,
-          year: Number.parseInt(exp.duration.split(" - ")[0]) || 0,
-          description: exp.description,
-        })),
-        education: editedProfile.education.map((edu) => ({
-          degree: edu.degree,
-          college: edu.institution,
-          passout_year: Number.parseInt(edu.year) || 0,
-        })),
-        projects: editedProfile.projects.map((proj) => ({
-          name: proj.name,
-          role: proj.role,
-          description: proj.description,
-        })),
-      }
-
-      console.log("Sending profile data:", profileData)
-
-      const response = await fetch("http://localhost:8443/edit_profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(profileData),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile")
-      }
-
-      // Update the profile state with the edited profile
-      setProfile(editedProfile)
-      setIsEditing(false)
-      setSaveStatus("success")
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSaveStatus(null)
-      }, 3000)
-    } catch (err) {
-      console.error("Error saving profile:", err)
-      setSaveStatus("error")
-
-      // Clear error message after 3 seconds
-      setTimeout(() => {
-        setSaveStatus(null)
-      }, 3000)
-    }
-  }
 
   const handleJobDetailsChange = (e) => {
     const { name, value } = e.target
@@ -264,7 +141,7 @@ const Profile = () => {
     setJobDetails({
       title: "",
       company: "",
-      location: "",
+      address: "",
       salary: "",
       jobType: "",
       experience: "",
@@ -274,6 +151,13 @@ const Profile = () => {
       rubrics: "",
     })
   }
+  const handleChange = (name, value) => {
+  setEditedProfile((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
 
   const handleScheduleInterview = () => {
     // In a real app, this would send the schedule details to an API
@@ -353,17 +237,7 @@ const Profile = () => {
                   ) : (
                       <h2 className="text-2xl font-bold text-white mb-1">{profile.name}</h2>
                   )}
-                  {isEditing ? (
-                      <input
-                          type="text"
-                          name="role"
-                          value={editedProfile.role}
-                          onChange={handleInputChange}
-                          className="input text-purple-300 bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                  ) : (
-                      <p className="text-purple-300">{profile.role}</p>
-                  )}
+                 
                 </div>
               </div>
               {isEditing ? (
@@ -427,16 +301,17 @@ const Profile = () => {
                 {isEditing ? (
                     <input
                         type="text"
-                        name="location"
-                        value={editedProfile.location}
+                        name="address"
+                        value={editedProfile.address}
                         onChange={handleInputChange}
                         className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                 ) : (
-                    <span>{profile.location}</span>
+                    <span>{profile.address}</span>
                 )}
               </div>
             </div>
+            
 
             {/* Skills */}
             <div>
@@ -551,24 +426,24 @@ const Profile = () => {
                             />
                             <input
                                 type="text"
-                                value={edu.institution}
-                                onChange={(e) => handleEducationChange(index, "institution", e.target.value)}
+                                value={edu.college}
+                                onChange={(e) => handleEducationChange(index, "college", e.target.value)}
                                 className="text-purple-300 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 w-full mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Institution"
+                                placeholder="college"
                             />
                             <input
                                 type="text"
-                                value={edu.year}
-                                onChange={(e) => handleEducationChange(index, "year", e.target.value)}
+                                value={edu.type}
+                                onChange={(e) => handleEducationChange(index, "type", e.target.value)}
                                 className="text-gray-400 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Year"
+                                placeholder="type"
                             />
                           </>
                       ) : (
                           <>
                             <h4 className="font-bold text-white">{edu.degree}</h4>
-                            <p className="text-purple-300">{edu.institution}</p>
-                            <p className="text-gray-400">{edu.year}</p>
+                            <p className="text-purple-300">{edu.college}</p>
+                            <p className="text-gray-400">{edu.type}</p>
                           </>
                       )}
                     </div>
@@ -578,7 +453,7 @@ const Profile = () => {
                         onClick={() =>
                             setEditedProfile((prev) => ({
                               ...prev,
-                              education: [...prev.education, { degree: "", institution: "", year: "" }],
+                              education: [...prev.education, { degree: "", college: "", type: "" }],
                             }))
                         }
                         className="bg-purple-600 hover:bg-purple-500 rounded-lg px-4 py-2 text-sm text-white transition-colors w-full"
@@ -606,10 +481,10 @@ const Profile = () => {
                             />
                             <input
                                 type="text"
-                                value={project.role}
-                                onChange={(e) => handleProjectChange(index, "role", e.target.value)}
+                                value={project.link}
+                                onChange={(e) => handleProjectChange(index, "link", e.target.value)}
                                 className="text-purple-300 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 w-full mb-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                placeholder="Your Role"
+                                placeholder="Your link"
                             />
                             <textarea
                                 value={project.description}
@@ -621,18 +496,18 @@ const Profile = () => {
                       ) : (
                           <>
                             <h4 className="font-bold text-white">{project.name}</h4>
-                            <p className="text-purple-300">{project.role}</p>
+                            <p className="text-purple-300">{project.link}</p>
                             <p className="text-gray-300 mt-2">{project.description}</p>
                           </>
                       )}
                     </div>
                 ))}
                 {isEditing && (
-                    <button
+                    <button 
                         onClick={() =>
                             setEditedProfile((prev) => ({
                               ...prev,
-                              projects: [...prev.projects, { name: "", role: "", description: "" }],
+                              projects: [...prev.projects, { name: "", link: "", description: "" }],
                             }))
                         }
                         className="bg-purple-600 hover:bg-purple-500 rounded-lg px-4 py-2 text-sm text-white transition-colors w-full"
@@ -658,6 +533,117 @@ const Profile = () => {
             )}
           </div>
         </div>
+
+
+{/* Additional Info */}
+<div className="mt-6">
+  <h3 className="text-xl font-bold mb-4 text-purple-300">Additional Info</h3>
+  <div className="grid grid-cols-2 gap-4">
+    {/* Phone */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.phone || ""}
+        onChange={(e) => handleChange("phone", e.target.value)}
+        placeholder="PhoneNumber"
+        className="input bg-gray-800/50 border border-gray-6  00 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">Phone: {profile.phone || "-"}</p>
+    )}
+
+    {/* Gender */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.gender || ""}
+        onChange={(e) => handleChange("gender", e.target.value)}
+        placeholder="Gender"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">Gender: {profile.gender || "-"}</p>
+    )}
+
+    {/* Date of Birth */}
+    {isEditing ? (
+      <input
+        type="date"
+        value={editedProfile.dob || ""}
+        onChange={(e) => handleChange("dob", e.target.value)}
+        placeholder="Date of Birth"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">DOB: {profile.dob || "-"}</p>
+    )}
+
+    {/* Current Company */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.current_com || ""}
+        onChange={(e) => handleChange("current_com", e.target.value)}
+        placeholder="Current Company"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">Company: {profile.current_com || "-"}</p>
+    )}
+
+    {/* Current Role */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.role || ""}
+        onChange={(e) => handleChange("role", e.target.value)}
+        placeholder="Current Role"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">Role: {profile.role || "-"}</p>
+    )}
+
+    {/* Portfolio */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.portfolio || ""}
+        onChange={(e) => handleChange("portfolio", e.target.value)}
+        placeholder="Portfolio URL"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">Portfolio: {profile.portfolio || "-"}</p>
+    )}
+
+    {/* LinkedIn */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.linked_in || ""}
+        onChange={(e) => handleChange("linked_in", e.target.value)}
+        placeholder="linked_in URL"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">linked_in: {profile.linked_in || "-"}</p>
+    )}
+
+    {/* GitHub */}
+    {isEditing ? (
+      <input
+        type="text"
+        value={editedProfile.git || ""}
+        onChange={(e) => handleChange("git", e.target.value)}
+        placeholder="GitHub URL"
+        className="input bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      />
+    ) : (
+      <p className="text-gray-300">GitHub: {profile.git || "-"}</p>
+    )}
+  </div>
+</div>
 
         {/* Create Job Modal */}
         {showJobModal && (
@@ -693,14 +679,14 @@ const Profile = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">address</label>
                     <input
                         type="text"
-                        name="location"
-                        value={jobDetails.location}
+                        name="address"
+                        value={jobDetails.address}
                         onChange={handleJobDetailsChange}
                         className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        placeholder="Enter job location"
+                        placeholder="Enter job address"
                     />
                   </div>
 
@@ -736,7 +722,7 @@ const Profile = () => {
                         value={jobDetails.experience}
                         onChange={handleJobDetailsChange}
                         className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        placeholder="Enter experience level (e.g., 3+ years)"
+                        placeholder="Enter experience level (e.g., 3+ types)"
                     />
                   </div>
 
