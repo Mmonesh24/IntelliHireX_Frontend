@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useState, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
 const AuthContext = createContext()
 
@@ -30,12 +30,14 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('user')
+    localStorage.removeItem('jwt')
     setCurrentUser(null)
   }
 
   const register = (userData, userType) => {
     // In a real app, you would send registration data to an API
     const user = { ...userData, userType }
+
     localStorage.setItem('user', JSON.stringify(user))
     setCurrentUser(user)
     return user

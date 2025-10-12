@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { registerUser } from '../utilis/api'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -42,19 +43,30 @@ const Register = () => {
     setLoading(true)
 
     try {
-      // In a real app, you would send registration data to an API
-      // For demo purposes, we'll just simulate a successful registration
-      await register(
-        { name: formData.name, email: formData.email },
-        formData.userType
-      )
+      const data = await registerUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: "candidate",
+      })
+
+      // If backend returned a user object and possibly a token, persist locally
+      const user = { name: data.name || formData.name, email: data.email || formData.email }
+      // Save JWT if provided
+      if (data.token) {
+        localStorage.setItem('jwt', data.token)
+      }
+
+      // Update AuthContext (keeps existing behavior)
+      register(user, formData.userType)
+
       navigate(
         formData.userType === 'candidate'
           ? '/candidate-dashboard'
           : '/interviewer-dashboard'
       )
-    } catch (error) {
-      setError('Failed to create an account. Please try again.')
+    } catch (err) {
+      setError(err.message || 'Failed to create an account. Please try again.')
     } finally {
       setLoading(false)
     }
