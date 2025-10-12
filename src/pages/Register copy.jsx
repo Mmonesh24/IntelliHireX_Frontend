@@ -1,52 +1,64 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("candidate");
-  const [role, setRole] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { login } = useAuth();
+const Register = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    userType: 'candidate',
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { register } = useAuth()
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleUserTypeChange = (type) => {
+    setFormData((prev) => ({ ...prev, userType: type }))
+  }
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault()
+    setError('')
 
-  try {
-    const response = await fetch("http://localhost:8080/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.status === "success") {
-      localStorage.setItem("jwt", data.token);
-      await login({ email }, userType);
-      navigate(
-        userType === "candidate"
-          ? "/candidate-dashboard"
-          : "/interviewer-dashboard",
-        { state: { email, userType, role } }
-      );
-    } else {
-      setError(data.message || "Invalid email or password.");
+    // Validate form
+    if (formData.password !== formData.confirmPassword) {
+      return setError('Passwords do not match')
     }
-  } catch (err) {
-    console.error(err);
-    setError("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
+
+    if (formData.password.length < 6) {
+      return setError('Password must be at least 6 characters')
+    }
+
+    setLoading(true)
+
+    try {
+      // In a real app, you would send registration data to an API
+      // For demo purposes, we'll just simulate a successful registration
+      await register(
+        { name: formData.name, email: formData.email },
+        formData.userType
+      )
+      navigate(
+        formData.userType === 'candidate'
+          ? '/candidate-dashboard'
+          : '/interviewer-dashboard'
+      )
+    } catch (error) {
+      setError('Failed to create an account. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
-};
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
@@ -58,10 +70,10 @@ const Login = () => {
         <div className="relative bg-gray-900/60 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-purple-500/20">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400">
-              Welcome Back
+              Create Account
             </h2>
             <p className="text-gray-300 mt-2">
-              Sign in to continue to IntelliHireX
+              Join IntelliHireX and transform your interview experience
             </p>
           </div>
 
@@ -83,26 +95,35 @@ const Login = () => {
                 <button
                   type="button"
                   className={`py-3 px-4 rounded-lg border ${
-                    userType === "candidate"
-                      ? "border-purple-500 bg-purple-500/20 text-white"
-                      : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                    formData.userType === 'candidate'
+                      ? 'border-purple-500 bg-purple-500/20 text-white'
+                      : 'border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
                   } transition-all focus:outline-none`}
-                  onClick={() => setUserType("candidate")}
+                  onClick={() => handleUserTypeChange('candidate')}
                 >
                   Candidate
                 </button>
-                <button
-                  type="button"
-                  className={`py-3 px-4 rounded-lg border ${
-                    userType === "interviewer"
-                      ? "border-purple-500 bg-purple-500/20 text-white"
-                      : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
-                  } transition-all focus:outline-none`}
-                  onClick={() => setUserType("interviewer")}
-                >
-                  Interviewer
-                </button>
               </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Enter your full name"
+              />
             </div>
 
             <div>
@@ -118,8 +139,8 @@ const Login = () => {
                 type="email"
                 autoComplete="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 placeholder="Enter your email"
               />
@@ -136,62 +157,33 @@ const Login = () => {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                placeholder="Enter your password"
+                placeholder="Create a password"
               />
             </div>
-            {userType === "interviewer" && (
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  required
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Select your role</option>
-                  <option value="technical">Technical Interviewer</option>
-                  <option value="hr">HR Interviewer</option>
-                  <option value="managerial">Managerial Interviewer</option>
-                </select>
-              </div>
-            )}
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 bg-gray-800 border-gray-600 rounded text-purple-500 focus:ring-purple-500"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-300"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  Forgot password?
-                </a>
-              </div>
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-300 mb-1"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Confirm your password"
+              />
             </div>
 
             <div>
@@ -222,10 +214,10 @@ const Login = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Signing in...
+                    Creating account...
                   </span>
                 ) : (
-                  "Sign in"
+                  'Create Account'
                 )}
               </button>
             </div>
@@ -233,7 +225,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Register
