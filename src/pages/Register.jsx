@@ -1,7 +1,7 @@
-'use client'
 
+import { registerUser } from '../utilis/registerApi';
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const Register = () => {
@@ -26,39 +26,49 @@ const Register = () => {
     setFormData((prev) => ({ ...prev, userType: type }))
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
 
-    // Validate form
-    if (formData.password !== formData.confirmPassword) {
-      return setError('Passwords do not match')
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (formData.password.length < 6) {
-      return setError('Password must be at least 6 characters')
-    }
-
-    setLoading(true)
-
-    try {
-      // In a real app, you would send registration data to an API
-      // For demo purposes, we'll just simulate a successful registration
-      await register(
-        { name: formData.name, email: formData.email },
-        formData.userType
-      )
-      navigate(
-        formData.userType === 'candidate'
-          ? '/candidate-dashboard'
-          : '/interviewer-dashboard'
-      )
-    } catch (error) {
-      setError('Failed to create an account. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+  if (formData.password !== formData.confirmPassword) {
+    return setError('Passwords do not match');
   }
+
+  if (formData.password.length < 6) {
+    return setError('Password must be at least 6 characters');
+  }
+
+  setLoading(true);
+
+  try {
+    const data = await registerUser({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.userType, // candidate or interviewer
+    });
+
+    // Save JWT if returned
+    if (data.token) {
+      localStorage.setItem('jwt', data.token);
+    }
+
+    // Update AuthContext
+    register({ name: data.name, email: data.email }, formData.userType);
+
+    navigate(
+      formData.userType === 'candidate'
+        ? '/candidate-dashboard'
+        : '/interviewer-dashboard'
+    );
+  } catch (err) {
+    setError(err.message || 'Failed to create an account. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
