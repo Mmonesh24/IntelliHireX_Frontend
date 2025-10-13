@@ -1,4 +1,5 @@
-"use client"
+
+import { fetchCandidateDashboard } from "../utilis/CandidateDashAPI";
 
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
@@ -25,140 +26,67 @@ const CandidateDashboard = () => {
     name: "Candidate",
   }
 
-  useEffect(() => {
-  const fetchApplications = async () => {
+useEffect(() => {
+  const getDashboard = async () => {
     try {
       setIsLoading(true);
 
-      // Simulate API delay
-      await new Promise((res) => setTimeout(res, 500));
+      // Call API (JWT automatically sent via api.js)
+      const data = await fetchCandidateDashboard();
 
-      // 🔹 MOCK DATA (simulating API response)
-      const data = {
-        status: "S",
-        applications: [
-          {
-            application_id: 1,
-            company_id: "OpenAI",
-            job_id: 101,
-            interviewer_id: 5,
-            meeting_id: "abc123",
-            status: "upcoming",
-            date: "2025-10-10",
-            time: "15:00",
-            score: null,
-            feedback: null,
-            coverletter: "Looking forward to this opportunity!",
-          },
-          {
-            application_id: 2,
-            company_id: "Google",
-            job_id: 102,
-            interviewer_id: 7,
-            meeting_id: null,
-            status: "pending",
-            date: null,
-            time: null,
-            score: null,
-            feedback: null,
-            coverletter: "Excited to apply for this position.",
-          },
-          {
-            application_id: 3,
-            company_id: "Microsoft",
-            job_id: 103,
-            interviewer_id: 2,
-            meeting_id: "xyz789",
-            status: "past",
-            date: "2025-09-20",
-            time: "10:00",
-            score: 85,
-            feedback: "Strong technical skills, could improve communication.",
-            coverletter: "Eager to contribute my experience.",
-          },
-        ],
-      };
+      // Transform upcoming interviews
+      const upcomingData = (data.upcomingInterviews || []).map((item) => ({
+        id: item.id,
+        company: item.companyName,
+        position: item.jobTitle || `Role ID: ${item.roleId}`,
+        date: item.date && item.time ? `${item.date} ${item.time}` : new Date().toISOString(),
+        interviewer: `Interviewer ID: ${item.interviewerId}`,
+        meeting_id: item.meetLink,
+        duration: item.duration,
+      }));
 
-      if (data.status === "S") {
-        const allApplications = data.applications || [];
+      // Transform past/completed interviews
+      const pastData = (data.completedInterviews || []).map((item) => ({
+        id: item.id,
+        company: item.companyName,
+        position: item.jobTitle || `Role ID: ${item.roleId}`,
+        date: item.date && item.time ? `${item.date} ${item.time}` : new Date().toISOString(),
+        score: item.score ? Number(item.score) : 0,
+        feedback: item.feedback || "No feedback provided",
+      }));
 
-        // Filter applications by status
-        const upcomingApps = allApplications.filter(
-          (app) => app.status !== "past" && app.meeting_id
-        );
-        const pastApps = allApplications.filter((app) => app.status === "past");
-        const pendingApps = allApplications.filter(
-          (app) => app.status !== "past" && !app.meeting_id
-        );
+      // Transform recent applications
+      const applicationsData = (data.recentApplications || []).map((app) => ({
+        id: app.roleId,
+        company: app.companyName,
+        position: app.jobTitle || `Role ID: ${app.roleId}`,
+        status: app.status,
+        appliedDate: new Date().toISOString(),
+      }));
 
-        // Transform data for upcoming interviews
-        const upcomingData = upcomingApps.map((app) => ({
-          id: app.application_id.toString(),
-          company: app.company_id,
-          position: `Job ID: ${app.job_id}`,
-          date: app.date
-            ? `${app.date} ${app.time || ""}`
-            : new Date().toISOString(),
-          interviewer: `Interviewer ID: ${app.interviewer_id || "TBD"}`,
-          meeting_id: app.meeting_id,
-        }));
+      setUpcomingInterviews(upcomingData);
+      setPastInterviews(pastData);
+      setApplications(applicationsData);
 
-        // Transform data for past interviews
-        const pastData = pastApps.map((app) => ({
-          id: app.application_id.toString(),
-          company: app.company_id,
-          position: `Job ID: ${app.job_id}`,
-          date: app.date
-            ? `${app.date} ${app.time || ""}`
-            : new Date().toISOString(),
-          score: app.score || 0,
-          feedback: app.feedback || "No feedback provided.",
-        }));
+      // Set stats
+      setStats({
+        totalInterviews: data.totalCompleted || 0,
+        averageScore: Math.round(data.averageScore || 0),
+        topSkill: data.upcomingCount || upcomingData.length,
+        improvementArea: (data.areaOfImprovement || []).join(", ") || "N/A",
+      });
 
-        // Transform data for applications
-        const applicationsData = pendingApps.map((app) => ({
-          id: app.application_id.toString(),
-          company: app.company_id,
-          position: `Job ID: ${app.job_id}`,
-          status: app.status,
-          appliedDate: new Date().toISOString(),
-          coverletter: app.coverletter,
-        }));
-
-        // Calculate stats
-        const totalInterviews = pastData.length;
-        const scores = pastData
-          .map((interview) => interview.score)
-          .filter((score) => score > 0);
-        const averageScore =
-          scores.length > 0
-            ? Math.round(
-                scores.reduce((sum, score) => sum + score, 0) / scores.length
-              )
-            : 0;
-
-        setUpcomingInterviews(upcomingData);
-        setPastInterviews(pastData);
-        setApplications(applicationsData);
-        setStats({
-          totalInterviews,
-          averageScore,
-          topSkill: upcomingData.length,
-          improvementArea: "System Design",
-        });
-      } else {
-        throw new Error(data.message || "Failed to retrieve applications");
-      }
     } catch (err) {
-      console.error("Error fetching applications:", err);
+      console.error(err);
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  fetchApplications();
+  getDashboard();
 }, []);
+
 
   const formatDate = (dateString) => {
     const options = {
