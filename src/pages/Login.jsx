@@ -9,40 +9,41 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("candidate");
-  const [role, setRole] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const data = await loginUser(email, password);
-
-      if (data.status === 200) {
-        localStorage.setItem("jwt", data.data.token);
-        await login({ email }, userType);
-        navigate(
-          userType === "candidate"
-            ? "/candidate-dashboard"
-            : "/interviewer-dashboard",
-          { state: { email, userType, role } }
-        );
-      } else {
-        setError(data.message || "Invalid email or password.");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+  try {
+    const data = await loginUser({ email, password, userType }); // only userType
+    console.log(data)
+    console.log(data.status)
+    if (data.status === 200) {
+      localStorage.setItem("jwt", data.token);
+      await login({ email }, userType);
+      navigate(
+        userType === "candidate"
+          ? "/candidate-dashboard"
+          : "/interviewer-dashboard",
+        { state: { email, userType} } // no role sent
+      );
+    } else {
+      setError(data.message || "Invalid email or password.");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
   return (
@@ -141,29 +142,7 @@ const Login = () => {
                 placeholder="Enter your password"
               />
             </div>
-            {userType === "interviewer" && (
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-300 mb-1"
-                >
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  required
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Select your role</option>
-                  <option value="technical">Technical Interviewer</option>
-                  <option value="hr">HR Interviewer</option>
-                  <option value="managerial">Managerial Interviewer</option>
-                </select>
-              </div>
-            )}
+            {userType === "interviewer"}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
