@@ -117,6 +117,41 @@ const handleSaveProfile = async () => {
     setEditedProfile((prev) => ({ ...prev, projects: newProjects }))
   }
 
+  // Convert file to base64
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (err) => reject(err)
+      reader.readAsDataURL(file)
+    })
+
+  // Resume upload handler
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    // Accept only PDFs
+    if (file.type !== "application/pdf") {
+      alert("Please upload a PDF file for the resume.")
+      return
+    }
+
+    try {
+      const base64 = await fileToBase64(file)
+      // Remove the data:application/...;base64, prefix if backend expects raw base64
+      // Keep prefix for now since profileApi uses resumeBase64 directly — backend should accept data URL or raw base64.
+      setEditedProfile((prev) => ({ ...prev, resumeBase64: base64, resumeName: file.name }))
+    } catch (err) {
+      console.error("Failed to read file:", err)
+      alert("Failed to read the resume file. Please try again.")
+    }
+  }
+
+  const handleRemoveResume = () => {
+    setEditedProfile((prev) => ({ ...prev, resumeBase64: "", resumeName: "" }))
+  }
+
 
 
   const handleJobDetailsChange = (e) => {
@@ -535,22 +570,6 @@ const handleSaveProfile = async () => {
               </div>
             </div>
 
-            {isEditing && (
-                <div className="flex justify-end">
-                  <button
-                      onClick={handleSaveProfile}
-                      disabled={saveStatus === "saving"}
-                      className={`px-6 py-3 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105 ${
-                          saveStatus === "saving" ? "opacity-70 cursor-not-allowed" : ""
-                      }`}
-                  >
-                    {saveStatus === "saving" ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-            )}
-          </div>
-        </div>
-
 
 {/* Additional Info */}
 <div className="mt-6">
@@ -661,6 +680,62 @@ const handleSaveProfile = async () => {
     )}
   </div>
 </div>
+
+{/* Resume Upload */}
+<div className="mt-6">
+  <h3 className="text-xl font-bold mb-4 text-purple-300">Resume</h3>
+  <div>
+    {isEditing ? (
+      <div className="flex items-center space-x-3">
+        <label className="cursor-pointer inline-flex items-center px-4 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white">
+          <input type="file" accept="application/pdf" onChange={handleResumeUpload} className="hidden" />
+          Upload PDF
+        </label>
+        {editedProfile?.resumeName ? (
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-300">{editedProfile.resumeName}</span>
+            <button onClick={handleRemoveResume} className="text-red-400 hover:text-red-300">Remove</button>
+          </div>
+        ) : (
+          <span className="text-gray-400">No file selected</span>
+        )}
+      </div>
+    ) : (
+      <div>
+        {profile?.resumeBase64 ? (
+          // Provide a link to view/download the resume. If backend stored raw base64 without data URL prefix,
+          // the frontend expects data URL; profileApi currently keeps whatever backend returns.
+          <a
+            href={profile.resumeBase64}
+            target="_blank"
+            rel="noreferrer"
+            className="text-purple-300 underline"
+          >
+            View Resume
+          </a>
+        ) : (
+          <p className="text-gray-300">No resume uploaded</p>
+        )}
+      </div>
+    )}
+  </div>
+</div>
+            {isEditing && (
+                <div className="flex justify-end">
+                  <button
+                      onClick={handleSaveProfile}
+                      disabled={saveStatus === "saving"}
+                      className={`px-6 py-3 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all transform hover:scale-105 ${
+                          saveStatus === "saving" ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
+                  >
+                    {saveStatus === "saving" ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+            )}
+          </div>
+        </div>
+
 
         {/* Create Job Modal */}
         {showJobModal && (
