@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import JitsiIframe from "../components/Jitvideo.jsx";
 import CodeCompiler from "./code-compiler.jsx";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+const WS_URL = "ws://10.53.107.47:8001/ws";
 
 const InterviewerRoom = () => {
   const { id } = useParams();

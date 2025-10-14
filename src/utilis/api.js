@@ -3,7 +3,9 @@ import axios from 'axios';
 
 // Create Axios instance
 const api = axios.create({
-  baseURL:  'https://intervueapi.buildapp.in/',
+  // baseURL:  'https://intervueapi.buildapp.in/',
+  baseURL:  'http://localhost:8080',
+
   headers: {
     'Content-Type': 'application/json',
   },

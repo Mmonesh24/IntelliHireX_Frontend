@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import JitsiIframe from "../components/Jitvideo.jsx";
 
-const WS_URL = "ws://localhost:8000/ws";
+const WS_URL = "ws://10.53.107.47:8001/ws";
 
 const CandidateRoom = () => {
   const { id } = useParams();
