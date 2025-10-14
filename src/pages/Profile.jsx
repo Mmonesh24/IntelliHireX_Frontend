@@ -1,6 +1,7 @@
 
 import { fetchProfile, updateProfile } from "../utilis/profileApi";
 import { useState, useEffect } from "react"
+import digilockerIcon from "../assets/DigiLocker_idUoQlVran_1.svg";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null)
@@ -227,17 +228,33 @@ const handleSaveProfile = async () => {
                 </div>
                 <div>
                   {isEditing ? (
-                      <input
-                          type="text"
-                          name="name"
-                          value={editedProfile.name}
-                          onChange={handleInputChange}
-                          className="input text-2xl font-bold mb-1 bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                            type="text"
+                            name="name"
+                            value={editedProfile.name}
+                            onChange={handleInputChange}
+                            className="input text-2xl font-bold mb-1 bg-gray-800/50 border border-gray-600 rounded-lg text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                        <img
+                          src={digilockerIcon}
+                          alt="DigiLocker"
+                          title="DigiLocker"
+                          className="h-5 w-auto"
+                        />
+                      </div>
                   ) : (
-                      <h2 className="text-2xl font-bold text-white mb-1">{profile.name}</h2>
+                      <div className="flex items-center">
+                        <h2 className="text-2xl font-bold text-white mb-1">{profile.name}</h2>
+                        <img
+                          src={digilockerIcon}
+                          alt="DigiLocker"
+                          title="DigiLocker"
+                          className="h-5 w-auto ml-2"
+                        />
+                      </div>
                   )}
-                 
+
                 </div>
               </div>
               {isEditing ? (
