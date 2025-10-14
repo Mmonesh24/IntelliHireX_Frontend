@@ -9,6 +9,8 @@ import CandidateDashboard from './pages/CandidateDashboard'
 import InterviewerDashboard from './pages/InterviewerDashboard'
 import InterviewRoom from './pages/InterviewRoom'
 import TrainingMode from './pages/TrainingMode'
+import CandidateRoom from './pages/CandidateRoom'
+import InterviewerRoom from './pages/InterviewerRoom'
 import JobListings from './pages/JobListings'
 import Profile from './pages/Profile'
 import Navbar from './components/Navbar'
@@ -86,7 +88,20 @@ function App() {
                   <InterviewRoom />
                 </ProtectedRoute>
               }
+            />            
+            <Route
+              path="/interview-room/:id/candidate"
+              element={
+                  <CandidateRoom />
+              }
+            />            
+            <Route
+              path="/interview-room/:id/interviewer"
+              element={
+                  <InterviewerRoom />
+              }
             />
+
             <Route
               path="/training"
               element={
